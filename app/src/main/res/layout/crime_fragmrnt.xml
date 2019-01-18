@@ -5,35 +5,42 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
-    <TextView
-        android:id="@+id/textView"
-        style="?android:listSeparatorTextViewStyle"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="5dp"
-        android:layout_marginLeft="5dp"
-        android:layout_marginTop="5dp"
-        android:layout_marginEnd="5dp"
-        android:layout_marginRight="5dp"
-        android:text="@string/title"
+    <!--<TextView-->
+    <!--android:id="@+id/textView"-->
+    <!--style="?android:listSeparatorTextViewStyle"-->
+    <!--android:layout_width="0dp"-->
+    <!--android:layout_height="wrap_content"-->
+    <!--android:layout_marginStart="5dp"-->
+    <!--android:layout_marginLeft="5dp"-->
+    <!--android:layout_marginTop="5dp"-->
+    <!--android:layout_marginEnd="5dp"-->
+    <!--android:layout_marginRight="5dp"-->
+    <!--android:text="@string/title"-->
+    <!--app:layout_constraintEnd_toEndOf="parent"-->
+    <!--app:layout_constraintStart_toStartOf="parent"-->
+    <!--app:layout_constraintTop_toTopOf="parent" />-->
+
+    <!--<EditText-->
+    <!--android:id="@+id/m_title"-->
+    <!--android:layout_width="0dp"-->
+    <!--android:layout_height="wrap_content"-->
+    <!--android:layout_marginStart="4dp"-->
+    <!--android:layout_marginLeft="4dp"-->
+    <!--android:layout_marginTop="9dp"-->
+    <!--android:layout_marginEnd="4dp"-->
+    <!--android:layout_marginRight="4dp"-->
+    <!--android:hint="@string/hint_title_crime"-->
+    <!--android:padding="4dp"-->
+    <!--app:layout_constraintEnd_toEndOf="parent"-->
+    <!--app:layout_constraintStart_toStartOf="parent"-->
+    <!--app:layout_constraintTop_toBottomOf="@+id/textView" />-->
+
+    <include
+        android:id="@+id/view_camera_title"
+        layout="@layout/view_camera_and_title"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
-
-    <EditText
-        android:id="@+id/m_title"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="4dp"
-        android:layout_marginLeft="4dp"
-        android:layout_marginTop="9dp"
-        android:layout_marginEnd="4dp"
-        android:layout_marginRight="4dp"
-        android:hint="@string/hint_title_crime"
-        android:padding="4dp"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/textView" />
 
     <TextView
         android:id="@+id/textView2"
@@ -48,7 +55,7 @@
         android:text="@string/details"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/m_title" />
+        app:layout_constraintTop_toBottomOf="@+id/view_camera_title" />
 
     <Button
         android:id="@+id/btn_data"

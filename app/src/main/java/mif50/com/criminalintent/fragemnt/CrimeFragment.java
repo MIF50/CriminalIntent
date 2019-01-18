@@ -6,17 +6,19 @@ import android.app.Activity;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
+import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.StrictMode;
 import android.provider.ContactsContract;
+import android.provider.MediaStore;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.ShareCompat;
 import android.text.format.DateFormat;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -27,8 +29,11 @@ import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.CompoundButton;
 import android.widget.EditText;
+import android.widget.ImageButton;
+import android.widget.ImageView;
 import android.widget.Toast;
 
+import java.io.File;
 import java.util.Date;
 import java.util.Objects;
 import java.util.UUID;
@@ -37,21 +42,29 @@ import mif50.com.criminalintent.R;
 import mif50.com.criminalintent.helper.GenericTextWatcher;
 import mif50.com.criminalintent.model.Crime;
 import mif50.com.criminalintent.model.CrimeLab;
+import mif50.com.criminalintent.utils.PictureUtlis;
 
 
 public class CrimeFragment extends Fragment implements CompoundButton.OnCheckedChangeListener {
 
     private static final int PERMISSIONS_REQUEST_READ_CONTACTS = 100;
-
+    private static final int REQUEST_DATE = 0;
     private static final int REQUEST_CONTACT = 1;
+    private static final int REQUEST_IMAGE = 2;
+
+
     private static final String ARG_CRIME_ID = "crime_id";
     private static final String DIALOG_DATE = "DialogDate";
-    private static final int REQUEST_DATE = 0;
+
     private Crime mCrime;
     private Button btn_date;
     private Button mReportBtn;
     private Button mSuspectBtn;
     private Button callBtn;
+    private ImageButton cameraIb;
+    private ImageView photoIv;
+
+    private File photoFile;
 
     Uri contactUri;
     String[] queryFields;
@@ -76,6 +89,7 @@ public class CrimeFragment extends Fragment implements CompoundButton.OnCheckedC
         UUID crimeID = (UUID) getArguments().getSerializable(ARG_CRIME_ID);
         CrimeLab crimeLab = CrimeLab.get(getActivity());
         mCrime = crimeLab.getCrime(crimeID);
+        photoFile = crimeLab.getFilePhoto(mCrime);
 
     }
 
@@ -121,15 +135,38 @@ public class CrimeFragment extends Fragment implements CompoundButton.OnCheckedC
 
         callBtn = v.findViewById(R.id.crime_call);
         callBtn.setOnClickListener(view -> {
-            if (mCrime.getNumber() != null){
+            if (mCrime.getNumber() != null) {
                 Intent intent = new Intent(Intent.ACTION_DIAL, Uri.parse("tel:" + mCrime.getNumber()));
                 startActivity(intent);
             }
 
         });
 
+        cameraIb = v.findViewById(R.id.crime_camera);
+        photoIv = v.findViewById(R.id.crime_photo);
+
+        // take image
+        final Intent captureImage = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+        boolean canTakeImage = photoFile != null && captureImage.resolveActivity(packageManager) != null;
+        cameraIb.setEnabled(canTakeImage);
+        if (canTakeImage) {
+            Uri uri = Uri.fromFile(photoFile);
+            captureImage.putExtra(MediaStore.EXTRA_OUTPUT, uri);
+        }
+
+        cameraIb.setOnClickListener(view -> {
+            //
+            StrictMode.VmPolicy.Builder builder = new StrictMode.VmPolicy.Builder();
+            StrictMode.setVmPolicy(builder.build());
+            startActivityForResult(captureImage, REQUEST_IMAGE);
+        });
+
+        updatePhotoView();
+
+
         return v;
     }
+
 
     private void sendTextContactShareCompat() {
         final Activity activity = Objects.requireNonNull(getActivity());
@@ -193,17 +230,17 @@ public class CrimeFragment extends Fragment implements CompoundButton.OnCheckedC
 
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
-        if (resultCode != Activity.RESULT_OK) {
+        if (resultCode != Activity.RESULT_OK || data == null) {
             return;
         }
         if (requestCode == REQUEST_DATE) {
             Date date = (Date) data.getSerializableExtra(DatePickerFragment.EXTRA_DATE);
             mCrime.setmData(date);
             updateDate();
-        } else if (requestCode == REQUEST_CONTACT && data != null) {
-             contactUri = data.getData();
+        } else if (requestCode == REQUEST_CONTACT) {
+            contactUri = data.getData();
             // specif which field you want your query to return value for.
-             queryFields = new String[]{
+            queryFields = new String[]{
                     ContactsContract.Contacts.DISPLAY_NAME,
                     ContactsContract.Contacts.LOOKUP_KEY,
             };
@@ -232,12 +269,13 @@ public class CrimeFragment extends Fragment implements CompoundButton.OnCheckedC
 
                 requestPermissions(new String[]{Manifest.permission.READ_CONTACTS}, PERMISSIONS_REQUEST_READ_CONTACTS);
                 //After this point you wait for callback in onRequestPermissionsResult(int, String[], int[]) overriden method
-            }
-            else getNumberFormContact();
+            } else getNumberFormContact();
+        } else if (requestCode == REQUEST_IMAGE) {
+            updatePhotoView();
         }
     }
 
-    private void getNumberFormContact(){
+    private void getNumberFormContact() {
         Uri contactUri = ContactsContract.CommonDataKinds.Phone.CONTENT_URI;
         String[] queryFields = new String[]{ContactsContract.CommonDataKinds.Phone.NUMBER};
 
@@ -290,5 +328,14 @@ public class CrimeFragment extends Fragment implements CompoundButton.OnCheckedC
         }
 
         return getString(R.string.crime_report, mCrime.getmTitle(), dateString, solvedString, suspect);
+    }
+
+    private void updatePhotoView() {
+        if (photoFile == null || !photoFile.exists()) {
+            photoIv.setImageDrawable(null);
+        } else {
+            Bitmap bitmap = PictureUtlis.getScaledBitmap(photoFile.getPath(), Objects.requireNonNull(getActivity()));
+            photoIv.setImageBitmap(bitmap);
+        }
     }
 }
