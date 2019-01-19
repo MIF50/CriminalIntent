@@ -1,4 +1,4 @@
-package mif50.com.criminalintent.fragemnt;
+package mif50.com.criminalintent.fragment;
 
 import android.annotation.SuppressLint;
 import android.content.Intent;

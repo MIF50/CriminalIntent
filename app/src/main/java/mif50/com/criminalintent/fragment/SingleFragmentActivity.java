@@ -1,4 +1,4 @@
-package mif50.com.criminalintent.fragemnt;
+package mif50.com.criminalintent.fragment;
 
 
 import android.os.Bundle;

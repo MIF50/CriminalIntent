@@ -1,4 +1,4 @@
-package mif50.com.criminalintent.fragemnt;
+package mif50.com.criminalintent.fragment;
 
 
 import android.Manifest;
@@ -162,6 +162,14 @@ public class CrimeFragment extends Fragment implements CompoundButton.OnCheckedC
         });
 
         updatePhotoView();
+
+        photoIv.setOnClickListener(view -> {
+            if (photoFile == null || !photoFile.exists())
+                return;
+            ImageFragment fragment = ImageFragment.newInstance(photoFile.getPath());
+            assert getFragmentManager() != null;
+            fragment.show(getFragmentManager(),ImageFragment.TAG);
+        });
 
 
         return v;
