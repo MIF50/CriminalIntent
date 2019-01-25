@@ -3,6 +3,7 @@ package mif50.com.criminalintent.fragment;
 
 import android.Manifest;
 import android.app.Activity;
+import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
@@ -18,6 +19,8 @@ import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.ShareCompat;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.text.format.DateFormat;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -71,6 +74,15 @@ public class CrimeFragment extends Fragment implements CompoundButton.OnCheckedC
     Cursor c;
     String suspectId;
 
+    private CallBacks callBacks;
+
+
+    /*
+     * required interface for hosting activities*/
+    public interface CallBacks {
+        void onCrimeUpdated(Crime crime);
+    }
+
 
     public static CrimeFragment newInstance(UUID crimeId) {
         Bundle args = new Bundle();
@@ -78,6 +90,12 @@ public class CrimeFragment extends Fragment implements CompoundButton.OnCheckedC
         CrimeFragment fragment = new CrimeFragment();
         fragment.setArguments(args);
         return fragment;
+    }
+
+    @Override
+    public void onAttach(Context context) {
+        super.onAttach(context);
+        callBacks = (CallBacks) context;
     }
 
     @Override
@@ -99,7 +117,22 @@ public class CrimeFragment extends Fragment implements CompoundButton.OnCheckedC
         View v = inflater.inflate(R.layout.crime_fragmrnt, container, false);
         EditText mTitle = v.findViewById(R.id.m_title);
         mTitle.setText(mCrime.getmTitle());
-        mTitle.addTextChangedListener(new GenericTextWatcher(mTitle, mCrime));
+        mTitle.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+
+            }
+
+            @Override
+            public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+                        mCrime.setmTitle(charSequence.toString());
+                        updateCrime();
+            }
+
+            @Override
+            public void afterTextChanged(Editable editable) {
+            }
+        });
         btn_date = v.findViewById(R.id.btn_data);
 
         updateDate();
@@ -168,7 +201,7 @@ public class CrimeFragment extends Fragment implements CompoundButton.OnCheckedC
                 return;
             ImageFragment fragment = ImageFragment.newInstance(photoFile.getPath());
             assert getFragmentManager() != null;
-            fragment.show(getFragmentManager(),ImageFragment.TAG);
+            fragment.show(getFragmentManager(), ImageFragment.TAG);
         });
 
 
@@ -209,6 +242,7 @@ public class CrimeFragment extends Fragment implements CompoundButton.OnCheckedC
         switch (id) {
             case R.id.check_solved:
                 mCrime.setmSolved(isChecked);
+                updateCrime();
                 break;
         }
     }
@@ -244,6 +278,7 @@ public class CrimeFragment extends Fragment implements CompoundButton.OnCheckedC
         if (requestCode == REQUEST_DATE) {
             Date date = (Date) data.getSerializableExtra(DatePickerFragment.EXTRA_DATE);
             mCrime.setmData(date);
+            updateCrime();
             updateDate();
         } else if (requestCode == REQUEST_CONTACT) {
             contactUri = data.getData();
@@ -265,6 +300,7 @@ public class CrimeFragment extends Fragment implements CompoundButton.OnCheckedC
                 String suspect = c.getString(c.getColumnIndex(ContactsContract.Contacts.DISPLAY_NAME));
                 suspectId = c.getString(c.getColumnIndex(ContactsContract.Contacts.LOOKUP_KEY));
                 mCrime.setmSuspect(suspect);
+                updateCrime();
                 mSuspectBtn.setEnabled(true);
                 mSuspectBtn.setText(suspect);
             } finally {
@@ -279,6 +315,7 @@ public class CrimeFragment extends Fragment implements CompoundButton.OnCheckedC
                 //After this point you wait for callback in onRequestPermissionsResult(int, String[], int[]) overriden method
             } else getNumberFormContact();
         } else if (requestCode == REQUEST_IMAGE) {
+            updateCrime();
             updatePhotoView();
         }
     }
@@ -314,6 +351,11 @@ public class CrimeFragment extends Fragment implements CompoundButton.OnCheckedC
         }
     }
 
+    private void updateCrime(){
+        CrimeLab.get(getActivity()).updateCrime(mCrime);
+        callBacks.onCrimeUpdated(mCrime);
+    }
+
     private void updateDate() {
         btn_date.setText(mCrime.getmData().toString());
     }
@@ -345,5 +387,12 @@ public class CrimeFragment extends Fragment implements CompoundButton.OnCheckedC
             Bitmap bitmap = PictureUtlis.getScaledBitmap(photoFile.getPath(), Objects.requireNonNull(getActivity()));
             photoIv.setImageBitmap(bitmap);
         }
+    }
+
+
+    @Override
+    public void onDetach() {
+        super.onDetach();
+        callBacks = null;
     }
 }

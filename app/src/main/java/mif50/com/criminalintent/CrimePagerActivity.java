@@ -14,11 +14,12 @@ import java.util.List;
 import java.util.UUID;
 
 import mif50.com.criminalintent.fragment.CrimeFragment;
+import mif50.com.criminalintent.fragment.CrimeListFragment;
 import mif50.com.criminalintent.model.Crime;
 import mif50.com.criminalintent.model.CrimeLab;
 
 
-public class CrimePagerActivity extends AppCompatActivity {
+public class CrimePagerActivity extends AppCompatActivity implements CrimeListFragment.CallBacks {
 
 
     private static final String EXTRA_CRIME_ID = "crime_Id";
@@ -71,6 +72,11 @@ public class CrimePagerActivity extends AppCompatActivity {
             }
         }
 
+
+    }
+
+    @Override
+    public void onCrimeSelected(Crime crime) {
 
     }
 }

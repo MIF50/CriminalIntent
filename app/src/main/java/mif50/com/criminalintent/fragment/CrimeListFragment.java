@@ -1,6 +1,7 @@
 package mif50.com.criminalintent.fragment;
 
 import android.annotation.SuppressLint;
+import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
@@ -45,11 +46,28 @@ public class CrimeListFragment extends Fragment implements ItemClickListener {
     private int mLastAdapterClickPosition = -1;
     private boolean mSubtitleVisible;
 
+    private CallBacks mCallBacks;
+
+    /*
+     * required interface for hosting activities
+     * */
+
+    public interface CallBacks {
+        void onCrimeSelected(Crime crime);
+    }
+
+    @Override
+    public void onAttach(Context context) {
+        super.onAttach(context);
+        mCallBacks = (CallBacks) context;
+    }
+
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setHasOptionsMenu(true);
     }
+
 
     @Nullable
     @Override
@@ -88,7 +106,7 @@ public class CrimeListFragment extends Fragment implements ItemClickListener {
         });
     }
 
-    private void updateUI() {
+    public void updateUI() {
         CrimeLab crimeLab = CrimeLab.get(getActivity());
         crimes = crimeLab.getCrimes();
         //Log.d("size",crimes.size()+"");
@@ -161,6 +179,7 @@ public class CrimeListFragment extends Fragment implements ItemClickListener {
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
             case R.id.menu_item_new_crime:
+                updateUI();
                 createNewCrime();
                 return true;
 
@@ -179,7 +198,8 @@ public class CrimeListFragment extends Fragment implements ItemClickListener {
     private void createNewCrime() {
         Crime crime = new Crime();
         CrimeLab.get(getActivity()).addCrime(crime);
-        startActivity(CrimePagerActivity.newIntent(getContext(), crime.getmID()));
+//        startActivity(CrimePagerActivity.newIntent(getContext(), crime.getmID()));
+        mCallBacks.onCrimeSelected(crime);
     }
 
     @Override
@@ -188,9 +208,14 @@ public class CrimeListFragment extends Fragment implements ItemClickListener {
 
         // we used CrimePagerActivity Instead of Crime  Activity
 
-        Intent intent = CrimePagerActivity.newIntent(getActivity(), crimes.get(position).getmID());
-        startActivity(intent);
+//        startActivity(CrimePagerActivity.newIntent(getActivity(), crimes.get(position).getmID()));
+        mCallBacks.onCrimeSelected(crimes.get(position));
     }
 
 
+    @Override
+    public void onDetach() {
+        super.onDetach();
+        mCallBacks = null;
+    }
 }
